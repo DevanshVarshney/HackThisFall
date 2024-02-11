@@ -1,0 +1,50 @@
+/* soldier-details.css */
+.marker-content {
+    display: none;
+    width: 30vw;
+    height: 70vh;
+    background-color: white;
+    margin-top: -80vh;
+    z-index: 10000;
+    position: relative;
+    left: 100%;
+    transition: left 0.5s ease-in-out;
+    border: none; /* Remove any border by default */
+  }
+  
+  .marker-content.slide-in {
+    left: 65vw;
+  }
+  
+  .marker-content.slide-in {
+    border: none; /* Remove border when detail section slides in */
+  }
+
+.soldier-details {
+    background-color: lightblue;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    text-align: center;
+  }
+  
+  .soldier-details img {
+    width: 350px; /* Adjust the width as needed */
+    height: 250px;
+    border-radius: 20%; /* To make the image circular */
+    margin-bottom: 15px;
+  }
+  
+  .soldier-details h1,
+  .soldier-details h2 {
+    margin-bottom: 10px;
+  }
+  
+  .soldier-details p {
+    margin: 5px 0;
+    font-weight: bold;
+  }
+  
+  /* You can add more styles as needed */
+  

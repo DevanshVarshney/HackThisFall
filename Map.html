@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <link rel="stylesheet" href="/Frontend/CSS/Map.css">
+  <title>Maps</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #66a4d0;
+      overflow: hidden;
+    }
+
+    .marker-content {
+      display: none;
+      width: 30vw;
+      height: 70vh;
+      background-color: white;
+      margin-top: -80vh;
+      z-index: 10000;
+      position: relative;
+      left: 100%;
+      transition: left 0.5s ease-in-out;
+    }
+    .slide-in {
+      left: 65vw;
+    }
+    .close-btn {
+      cursor: pointer;
+      position: relative;
+      left: 28vw;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="map-container">
+    <div
+      id="map"
+      style="
+        width: 90vw;
+        height: 85vh;
+        margin-left: 5vw;
+        margin-right: 10vw;
+        margin-top: 5vh;
+      "
+    ></div>
+  </div>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const fetchDataAndDisplayMap = async () => {
+        try {
+          console.log("Step 1: Fetching data...");
+
+          const fetchData = async () => {
+            const response = await fetch("http://192.168.204.126:1500");
+            if (!response.ok) {
+              console.warn(
+                "Network response was not ok. Using default values."
+              );
+              return null;
+            }
+            return response.json();
+          };
+
+          const data = await Promise.race([
+            fetchData(),
+            new Promise((resolve) => setTimeout(() => resolve(null), 3000)),
+          ]);
+
+          if (!data) {
+            console.error(
+              "Error fetching data: Timeout exceeded. Using default values."
+            );
+            // Use default values when data cannot be fetched
+            const defaultLatitude = 0;
+            const defaultLongitude = 0;
+            const defaultAltitude = 0;
+            const defaultTime = "01:26:29";
+            const defaultDate = "11/02/2024";
+            const defaultTemperature = 25.875;
+            const defaultHeartRate = 89;
+            const defaultSpO2 = 99;
+            updateMap({
+              latitude: defaultLatitude,
+              longitude: defaultLongitude,
+              altitude: defaultAltitude,
+              time: defaultTime,
+              date: defaultDate,
+              temperature: defaultTemperature,
+              heartRate: defaultHeartRate,
+              spo2: defaultSpO2
+            });
+          } else {
+            console.log("Step 2: Fetched data:", data);
+
+            const { altitude, bpm, day, hour, latitude, longitude, minute, month, second, spO2, temperature, year } = data;
+
+            console.log("Step 3: Using values:", {
+              altitude,
+              bpm,
+              day,
+              hour,
+              latitude,
+              longitude,
+              minute,
+              month,
+              second,
+              spO2,
+              temperature,
+              year
+            });
+
+            const defaultTime = `${hour}:${minute}:${second}`;
+            const defaultDate = `${day}/${month}/${year}`;
+
+            updateMap({
+              latitude: latitude || 23.207195,
+              longitude: longitude || 72.582511,
+              altitude: altitude || 0,
+              time: defaultTime,
+              date: defaultDate,
+              temperature: temperature || 25.875,
+              heartRate: bpm ,
+              spo2: spO2 
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
+      };
+
+      const updateMap = (data) => {
+        const { latitude, longitude, altitude, time, date, temperature, heartRate, spo2 } = data;
+
+        const map = L.map("map").setView(
+          [parseFloat(latitude), parseFloat(longitude)],
+          15
+        );
+
+        console.log("Step 4: Map created.");
+
+        L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        }).addTo(map);
+
+        console.log("Step 5: Tile layer added.");
+
+        const markers = [];
+
+        const mainMarker = L.marker([
+          parseFloat(latitude),
+          parseFloat(longitude),
+        ]).addTo(map);
+        
+        // Check heart rate and set marker color
+        if (heartRate < 60) {
+  mainMarker.setIcon(L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png' }));
+  // Show a popup at the top of the page
+  const helpPopup = document.createElement('div');
+  helpPopup.setAttribute('id', 'help-popup');
+  helpPopup.textContent = 'This person needs help!';
+  document.body.appendChild(helpPopup);
+} else {
+  mainMarker.setIcon(L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png' }));
+}
+
+
+        mainMarker.bindPopup(
+          `
+          Latitude: ${latitude}<br>
+          Longitude: ${longitude}<br>
+          Altitude: ${altitude}<br>
+          Time: ${time}<br>
+          Date: ${date}<br>
+          Temperature: ${temperature}<br>
+          Heart Rate: ${heartRate}<br>
+          SpO2: ${spo2}
+        `,
+          { className: "custom-popup", id: "1" }
+        )
+        .on("click", function () {
+          document.querySelectorAll(".marker-content").forEach((div) => {
+            div.style.display = "none";
+          });
+
+          const correspondingDiv = document.getElementById("1");
+          if (correspondingDiv) {
+            correspondingDiv.style.display = "block";
+            correspondingDiv.classList.toggle('slide-in');
+          }
+        })
+        .on("mouseover", function (e) {
+          this.openPopup();
+        })
+        .on("mouseout", function (e) {
+          this.closePopup();
+        });
+
+        markers.push(mainMarker);
+
+        // Additional markers
+        const additionalMarkers = [
+          {
+            latitude: parseFloat(latitude) + 0.002,
+            longitude: parseFloat(longitude) + 0.002,
+            altitude: 0,
+            time: "Additional Marker Time 1",
+            date: "Additional Marker Date 1",
+            temperature: 24,
+            heartRate: 85,
+            spo2: 97
+          },
+          {
+            latitude: parseFloat(latitude) + 0.007,
+            longitude: parseFloat(longitude) + 0.003,
+            altitude: 0,
+            time: "Additional Marker Time 2",
+            date: "Additional Marker Date 2",
+            temperature: 26,
+            heartRate: 90,
+            spo2: 95
+          },
+          {
+            latitude: parseFloat(latitude) - 0.005,
+            longitude: parseFloat(longitude) + 0.005,
+            altitude: 0,
+            time: "Additional Marker Time 3",
+            date: "Additional Marker Date 3",
+            temperature: 28,
+            heartRate: 95,
+            spo2: 92
+          },
+        ];
+
+        additionalMarkers.forEach(
+          ({ latitude, longitude, altitude, time, date, temperature, heartRate, spo2 }, index) => {
+            const marker = L.marker([latitude, longitude])
+              .addTo(map)
+              .bindPopup(
+                `
+              Latitude: ${latitude}<br>
+              Longitude: ${longitude}<br>
+              Altitude: ${altitude}<br>
+              Time: ${time}<br>
+              Date: ${date}<br>
+              Temperature: ${temperature}<br>
+              Heart Rate: ${heartRate}<br>
+              SpO2: ${spo2}
+            `,
+                { className: "custom-popup", id: `${index + 2}` }
+              )
+              .on("click", function () {
+                document
+                  .querySelectorAll(".marker-content")
+                  .forEach((div) => {
+                    div.style.display = "none";
+                  });
+
+                const correspondingDiv = document.getElementById(`${index + 2}`);
+                if (correspondingDiv) {
+                  correspondingDiv.style.display = "block";
+                  correspondingDiv.classList.toggle('slide-in');
+                }
+              })
+              .on("mouseover", function (e) {
+                this.openPopup();
+              })
+              .on("mouseout", function (e) {
+                this.closePopup();
+              });
+
+            markers.push(marker);
+          }
+        );
+
+        console.log("Step 8: Process completed successfully.");
+      };
+
+      fetchDataAndDisplayMap();
+
+      // Fetch data every 5 seconds
+      setInterval(fetchDataAndDisplayMap, 5000);
+    });
+  </script>
+  <script>
+    function closeContainer() {
+      var containers = document.getElementsByClassName("marker-content");
+      for (var i = 0; i < containers.length; i++) {
+        containers[i].style.display = "none";
+      }
+    }
+  </script>
+
+  <!-- Soldier details -->
+  <div id="1" class="marker-content">
+    <span class="close-btn" onclick="closeContainer()">✖</span>
+    <div class="soldier-details">
+      <!-- <img src="/Frontend/Images/GOJO.jpg" -->
+      <h1>Gojo Satoru</h1>
+      <p>Rank: Sergeant</p>
+      <p>Joining Date: January 15, 2022</p>
+      <p>Division: Alpha Company</p>
+    </div>
+  </div>
+  <div id="2" class="marker-content">
+    <span class="close-btn" onclick="closeContainer()">✖</span>
+    <div class="soldier-details"><h2>I am soldier2</h2></div>
+  </div>
+  <div id="3" class="marker-content">
+    <span class="close-btn" onclick="closeContainer()">✖</span>
+    <div class="soldier-details"><h2>I am soldier3</h2></div>
+  </div>
+  <div id="4" class="marker-content">
+    <span class="close-btn" onclick="closeContainer()">✖</span>
+    <div class="soldier-details"><h2>I am soldier4</h2></div>
+  </div>
+</body>
+</html>

@@ -10,13 +10,13 @@
 # include <PubSubClient.h>
 
 //MQTT
-const char* ssid = "Gal";
-const char* password = "Tri";
-const char* mqttServer = "192.1.1.0";
+const char* ssid = "Galaxy";
+const char* password = "Trinetra";
+const char* mqttServer = "192.168.204.126";
 const int mqttPort = 1883;
 const char* mqttUser = "test";
-const char* mqttPassword = "0123456789";
-const char* mqttTopic = "trial/esp";
+const char* mqttPassword = "123456789";
+const char* mqttTopic = "trial/esp";5
 void callback(char* topic, byte* payload, unsigned int length) {
     Serial.println("Message arrived in topic: " + String(topic));
     Serial.println("Message: " + String((char*)payload));}
