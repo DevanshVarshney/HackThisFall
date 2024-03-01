@@ -12,10 +12,10 @@
 //MQTT
 const char* ssid = "Galaxy";
 const char* password = "Trinetra";
-const char* mqttServer = "192.168.204.126";
+const char* mqttServer = "ip";
 const int mqttPort = 1883;
 const char* mqttUser = "test";
-const char* mqttPassword = "123456789";
+const char* mqttPassword = "passwd";
 const char* mqttTopic = "trial/esp";5
 void callback(char* topic, byte* payload, unsigned int length) {
     Serial.println("Message arrived in topic: " + String(topic));
